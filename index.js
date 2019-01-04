@@ -1,11 +1,13 @@
 'use strict';
 
 const http = require(`http`);
+const https = require(`https`);
 const net = require(`net`);
 const url = require(`url`);
 
 const proxyRequest = (url, cltReq, cltRes) => {
-  http.get(url, (srvRes) => {
+  const requeest = url.protocol === `http:` ? http : https;
+  requeest.get(url, (srvRes) => {
     srvRes.pipe(cltRes);
   });
 };
@@ -24,7 +26,12 @@ const proxyConnectRequest = (srvUrl, cltSocket, head) => {
 
 // Create an HTTP tunneling proxy
 const proxy = http.createServer((req, res) => {
-  proxyRequest(url.parse(req.url), req, res);
+  const myUrl = url.parse(req.url);
+  if (!myUrl.hostname) {
+    proxyRequest(myUrl.parse(`https://google.com${req.url}`), req, res);
+  } else {
+    proxyRequest(myUrl, req, res);
+  }
 });
 
 
