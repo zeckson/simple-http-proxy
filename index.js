@@ -4,15 +4,15 @@ const http = require(`http`);
 const net = require(`net`);
 const url = require(`url`);
 
-// Create an HTTP tunneling proxy
-const proxy = http.createServer((req, res) => {
-  res.writeHead(200, {'Content-Type': `text/plain`});
-  res.end(`okay`);
-});
-proxy.on(`connect`, (req, cltSocket, head) => {
-  // connect to an origin server
-  const srvUrl = url.parse(`https://${req.url}`);
-  const srvSocket = net.connect(srvUrl.port, srvUrl.hostname, () => {
+const proxyRequest = (url, cltReq, cltRes) => {
+  http.get(url, (srvRes) => {
+    srvRes.pipe(cltRes);
+  });
+};
+
+const proxyConnectRequest = (srvUrl, cltSocket, head) => {
+  const port = srvUrl.port || srvUrl.protocol === `http:` ? 80 : 443;
+  const srvSocket = net.connect(port, srvUrl.hostname, () => {
     cltSocket.write(`HTTP/1.1 200 Connection Established\r\n` +
       `Proxy-agent: Node.js-Proxy\r\n` +
       `\r\n`);
@@ -20,6 +20,17 @@ proxy.on(`connect`, (req, cltSocket, head) => {
     srvSocket.pipe(cltSocket);
     cltSocket.pipe(srvSocket);
   });
+};
+
+// Create an HTTP tunneling proxy
+const proxy = http.createServer((req, res) => {
+  proxyRequest(url.parse(req.url), req, res);
+});
+
+
+proxy.on(`connect`, (req, cltSocket, head) => {
+  // connect to an origin server
+  proxyConnectRequest(url.parse(`https://${req.url}`), cltSocket, head);
 });
 
 const PORT_NUMBER = 1337;
