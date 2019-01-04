@@ -1,10 +1,10 @@
 'use strict';
 
-const https = require(`https`);
+const https = require(`follow-redirects`).https;
 const url = require(`url`);
 
 const GET_TARGET_SERVER_URL = `https://api.telegram.org`;
-const POST_TARGET_SERVER_URL = `https://core.telegram.org`;
+const POST_TARGET_SERVER_URL = `https://api.telegram.org`;
 
 const proxyRequest = (target, cltReq, cltRes) => {
   const headers = {};
