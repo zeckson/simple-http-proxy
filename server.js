@@ -1,7 +1,7 @@
 'use strict';
 
-const http = require('http');
-const handler = require('./index');
+const http = require(`http`);
+const handler = require(`./index`);
 
 const proxy = http.createServer(handler);
 

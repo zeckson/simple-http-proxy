@@ -20,7 +20,7 @@ const proxyRequest = (target, cltReq, cltRes) => {
     port: target.port || target.protocol === `http:` ? 80 : 443,
     path: cltReq.path,
     method: cltReq.method,
-    headers: headers
+    headers
   };
 
   const srvReq = https.request(options, (srvRes) => {
