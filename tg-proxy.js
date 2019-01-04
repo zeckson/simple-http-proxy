@@ -2,16 +2,17 @@
 
 const http = require(`http`);
 const https = require(`https`);
+const url = require(`url`);
 
-const proxyRequest = (url, cltReq, cltRes) => {
-  https.get(url, (srvRes) => {
+const proxyRequest = (target, cltReq, cltRes) => {
+  https.get(target, (srvRes) => {
     srvRes.pipe(cltRes);
   });
 };
 
 // Create an HTTP tunneling proxy
 const proxy = http.createServer((req, res) => {
-  proxyRequest(myUrl.parse(`https://api.telegram.org${req.url}`), req, res);
+  proxyRequest(url.parse(`https://api.telegram.org${req.url}`), req, res);
 });
 
 const PORT_NUMBER = 1337;

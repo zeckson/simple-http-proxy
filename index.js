@@ -5,9 +5,9 @@ const https = require(`https`);
 const net = require(`net`);
 const url = require(`url`);
 
-const proxyRequest = (url, cltReq, cltRes) => {
-  const requeest = url.protocol === `http:` ? http : https;
-  requeest.get(url, (srvRes) => {
+const proxyRequest = (targetUrl, cltReq, cltRes) => {
+  const requeest = targetUrl.protocol === `http:` ? http : https;
+  requeest.get(targetUrl, (srvRes) => {
     srvRes.pipe(cltRes);
   });
 };
