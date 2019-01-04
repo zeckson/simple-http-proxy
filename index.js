@@ -3,6 +3,8 @@
 const https = require(`https`);
 const url = require(`url`);
 
+const TARGET_SERVER_URL = `https://api.telegram.org`;
+
 const proxyRequest = (target, cltReq, cltRes) => {
   const headers = {};
 
@@ -35,5 +37,5 @@ const proxyRequest = (target, cltReq, cltRes) => {
 // Create an HTTP tunneling proxy
 module.exports = (req, res) => {
   console.log(`Processing ${req.method} ${req.url}`);
-  proxyRequest(url.parse(`https://api.telegram.org${req.url}`), req, res);
+  proxyRequest(url.parse(`${TARGET_SERVER_URL}${req.url}`), req, res);
 };
