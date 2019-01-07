@@ -23,6 +23,7 @@
     "eslint-config-htmlacademy": "0.5.2"
   },
   "dependencies": {
-    "follow-redirects": "1.6.1"
+    "follow-redirects": "1.6.1",
+    "node-http-proxy": "0.2.3"
   }
 }

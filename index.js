@@ -36,8 +36,22 @@ const proxyRequest = (target, cltReq, cltRes) => {
 };
 
 // Create an HTTP tunneling proxy
-module.exports = (req, res) => {
+const tunnel = (req, res) => {
   console.log(`Processing ${req.method} ${req.url}`);
   const baseUrl = req.method.toLowerCase() === `get` ? GET_TARGET_SERVER_URL : POST_TARGET_SERVER_URL;
   proxyRequest(url.parse(`${baseUrl}${req.url}`), req, res);
 };
+
+const httpProxy = require(`http-proxy`);
+
+const proxy = httpProxy.createProxyServer({
+  target: GET_TARGET_SERVER_URL
+});
+
+const proxyfy = (req, res) => {
+  console.log(`Proxying ${req.method} ${req.url}`);
+  proxy.web(req, res, { target: GET_TARGET_SERVER_URL });
+  proxy.on(`error`, (e) => console.error(e));
+};
+
+module.exports = proxyfy;
