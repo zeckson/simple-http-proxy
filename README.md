@@ -1,2 +1,2 @@
 # simple-http-proxy
-Simple HTTP standart proxy
+Simple HTTP tunnel to bypass RosKommNadzor restrictions
