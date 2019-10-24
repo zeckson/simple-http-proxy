@@ -1,45 +1,64 @@
 'use strict';
 
-const https = require(`follow-redirects`).https;
-const url = require(`url`);
+const https = require(`https`);
+const {inspect} = require(`util`);
 
-const GET_TARGET_SERVER_URL = `https://api.telegram.org`;
-const POST_TARGET_SERVER_URL = `https://api.telegram.org`;
+const REJECTED_HEADERS = new Set([`host`]);
+const filterOutBadHeaders = (headers) => {
+  return Object
+    .entries(headers)
+    .filter(([key]) => !(REJECTED_HEADERS.has(key.toLowerCase())))
+    .reduce((acc, [k, v]) => {
+      acc[k] = v;
+      return acc;
+    }, {});
+};
 
-const proxyRequest = (target, cltReq, cltRes) => {
-  const headers = {};
-
-  for (const [key, value] of Object.entries(cltReq.headers)) {
-    if (key.toLowerCase() !== `host`) {
-      headers[key] = value;
-    }
-  }
-
+const proxy = (url, req, res) => {
+  const target = new URL(url);
   const options = {
     hostname: target.hostname,
-    port: target.port || target.protocol === `http:` ? 80 : 443,
-    path: cltReq.path,
-    method: cltReq.method,
-    headers
+    port: target.port,
+    path: req.url,
+    method: req.method,
+    headers: filterOutBadHeaders(req.headers)
   };
+  console.log(`Request [${req.method}]: ${url}`);
+  console.log(`Headers:\n${inspect(options, {depth: 1})}`);
+  const proxyReq = https.request(options, (proxyRes) => {
 
-  const srvReq = https.request(options, (srvRes) => {
-    console.log(`STATUS: ${srvRes.statusCode}`);
-    console.log(`HEADERS: ${JSON.stringify(srvRes.headers)}`);
-    for (const [key, value] of Object.entries(srvRes.headers)) {
-      cltRes.setHeader(key, value);
-    }
-    srvRes.pipe(cltRes);
+    console.log(`Response: ${proxyRes.statusCode}`);
+    console.log(`Headers:\n${inspect(proxyRes.headers, {depth: 1})}`);
+
+    res.statusCode = proxyRes.statusCode;
+    res.headers = filterOutBadHeaders(proxyRes.headers);
+
+    res.flushHeaders();
+
+    proxyRes.on(`error`, ({message}) => {
+      console.error(`Proxy response error: ${message}`);
+      res.end(message);
+    });
+    res.on(`error`, ({message}) => {
+      console.error(`Response error: ${message}`);
+      res.end(message);
+    });
+
+    proxyRes.pipe(res);
+  });
+  proxyReq.on(`error`, ({message}) => {
+    console.error(`Proxy request error: ${message}`);
+    res.end(message);
+  });
+  req.on(`error`, ({message}) => {
+    console.error(`Request error: ${message}`);
+    res.end(message);
   });
 
-  cltReq.pipe(srvReq);
+  // write data to request body
+  req.pipe(proxyReq);
 };
 
-// Create an HTTP tunneling proxy
-const tunnel = (req, res) => {
-  console.log(`Processing ${req.method} ${req.url}`);
-  const baseUrl = req.method.toLowerCase() === `get` ? GET_TARGET_SERVER_URL : POST_TARGET_SERVER_URL;
-  proxyRequest(url.parse(`${baseUrl}${req.url}`), req, res);
-};
+module.exports = proxy;
 
-module.exports = tunnel;
+

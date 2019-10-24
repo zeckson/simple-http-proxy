@@ -1,9 +1,7 @@
 'use strict';
 
-const proxy = require(`../tg-proxy`);
-const {inspect} = require(`util`);
+const proxy = require(`../tunnel`);
 
-module.exports = (req, res) => {
-  console.log(inspect(req.query));
-  proxy(req, res);
-};
+const API_URL = `https://api.telegram.org`;
+
+module.exports = (req, res) => proxy(API_URL, req, res);

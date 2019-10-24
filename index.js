@@ -1,17 +1,12 @@
 'use strict';
 
-const GET_TARGET_SERVER_URL = `https://api.telegram.org`;
+const http = require(`http`);
+const handler = require(`./api/index`);
 
-const httpProxy = require(`http-proxy`);
+const proxy = http.createServer(handler);
 
-const proxy = httpProxy.createProxyServer({
-  target: GET_TARGET_SERVER_URL
+const PORT_NUMBER = 1337;
+// now that proxy is running
+proxy.listen(PORT_NUMBER, () => {
+  console.log(`Started proxy @ port ${PORT_NUMBER}`);
 });
-
-const proxyfy = (req, res) => {
-  console.log(`Proxying ${req.method} ${req.url}`);
-  proxy.web(req, res, {target: GET_TARGET_SERVER_URL});
-  proxy.on(`error`, (e) => console.error(e));
-};
-
-module.exports = proxyfy;
