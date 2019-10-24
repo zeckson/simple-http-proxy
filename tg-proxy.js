@@ -3,7 +3,18 @@
 const https = require(`https`);
 const {inspect} = require(`util`);
 
-const API_URL = `https://httpbin.org`;
+const API_URL = `https://api.telegram.org`;
+
+const REJECTED_HEADERS = new Set([`host`]);
+const filterOutBadHeaders = (headers) => {
+  return Object
+    .entries(headers)
+    .filter(([key]) => !(REJECTED_HEADERS.has(key.toLowerCase())))
+    .reduce((acc, [k, v]) => {
+      acc[k] = v;
+      return acc;
+    }, {});
+};
 
 const proxy = (req, res) => {
   console.log(`Requesting url`);
@@ -18,9 +29,10 @@ const proxy = (req, res) => {
     port: myUrl.port,
     path: req.url,
     method: req.method,
+    headers: filterOutBadHeaders(req.headers)
   };
   // TODO: filter out correct headers
-  console.log(inspect(options, {depth: 0}));
+  console.log(inspect(options, {depth: 1}));
   const proxyReq = https.request(options, (proxyRes) => {
     const {statusCode} = proxyRes;
     console.log(`Got response: ${statusCode}`);
@@ -29,7 +41,11 @@ const proxy = (req, res) => {
     console.log(`HEADERS: ${JSON.stringify(proxyRes.headers)}`);
 
     res.statusCode = proxyRes.statusCode;
-    res.headers = proxyRes.headers;
+    res.headers = filterOutBadHeaders(proxyRes.headers);
+    console.log(inspect(proxyRes.headers, {depth: 1}));
+    console.log(inspect(res.headers, {depth: 1}));
+    res.flushHeaders();
+
 
     proxyRes.on(`error`, (e) => {
       console.error(`Proxy res-error: ${e.message}`);
@@ -38,7 +54,6 @@ const proxy = (req, res) => {
       console.error(`Res-error: ${e.message}`);
     });
     proxyRes.pipe(res);
-
   });
   proxyReq.on(`error`, (e) => {
     console.error(`Got proxy-error: ${e.message}`);
