@@ -1,24 +1,47 @@
 'use strict';
 
-const http = require(`http`);
 const https = require(`https`);
-const url = require(`url`);
+const {inspect} = require(`util`);
 
-const proxyRequest = (target, cltReq, cltRes) => {
-  https.get(target, (srvRes) => {
-    srvRes.pipe(cltRes);
+const API_URL = `https://api.telegram.org`;
+
+const proxy = (req, res) => {
+  console.log(`Requesting url`);
+  console.log(inspect(req, {depth: 0}));
+
+  const url = API_URL + req.url;
+  console.log(`Requesting url: ${url}`);
+
+  const options = new URL(url);
+  options.method = req.method;
+  options.headers = req.headers;
+  const proxyReq = https.request(options, (proxyRes) => {
+    const {statusCode} = proxyRes;
+    console.log(`Got response: ${statusCode}`);
+
+    console.log(`STATUS: ${proxyRes.statusCode}`);
+    console.log(`HEADERS: ${JSON.stringify(proxyRes.headers)}`);
+
+    proxyRes.on(`error`, (e) => {
+      console.error(`Proxy res-error: ${e.message}`)
+    });
+    res.on(`error`, (e) => {
+      console.error(`Res-error: ${e.message}`)
+    });
+    proxyRes.pipe(res);
+
   });
+  proxyReq.on('error', (e) => {
+    console.error(`Got proxy-error: ${e.message}`);
+  });
+  req.on('error', (e) => {
+    console.error(`Got req-error: ${e.message}`);
+  });
+
+  // write data to request body
+  req.pipe(proxyReq);
 };
 
-// Create an HTTP tunneling proxy
-const proxy = http.createServer((req, res) => {
-  proxyRequest(url.parse(`https://api.telegram.org${req.url}`), req, res);
-});
-
-const PORT_NUMBER = 1337;
-// now that proxy is running
-proxy.listen(PORT_NUMBER, () => {
-  console.log(`Started proxy @ port ${PORT_NUMBER}`);
-});
+module.exports = proxy;
 
 
