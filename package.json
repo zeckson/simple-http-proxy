@@ -22,5 +22,7 @@
     "eslint": "5.11.1",
     "eslint-config-htmlacademy": "0.5.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "http-proxy": "1.18.0"
+  }
 }
