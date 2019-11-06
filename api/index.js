@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require(`./proxy.js`);
+module.exports = require(`./telegram`);
