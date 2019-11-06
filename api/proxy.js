@@ -2,7 +2,7 @@
 
 const httpProxy = require(`http-proxy`);
 
-const DEFAULT_TARGET_URL = `https://api.telegram.org`;
+const DEFAULT_TARGET_URL = `https://telegram.org`;
 
 const proxy = httpProxy.createProxyServer({changeOrigin: true});
 
@@ -12,7 +12,9 @@ const handler = (req, res) => {
   const isLocal = host.includes(`localhost`);
   const isNow = host.includes(`now.sh`);
 
-  const target = isLocal || isNow ? DEFAULT_TARGET_URL : req.url;
+  console.log(`Host: ${host}`);
+
+  const target = DEFAULT_TARGET_URL;
 
   proxy.web(req, res, {target});
 };
